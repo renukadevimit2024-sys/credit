@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PayFlow – Credit Card Processing Demo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOGIN (demo only) -->
+<section id="login" class="login">
+  <form id="loginForm" class="login-box" novalidate>
+    <h1>PayFlow</h1>
+    <p class="muted">Credit Card Processing System</p>
+    <p class="notice">Demo login only – not secure authentication. Use <b>CUST1001</b> / <b>Demo@123</b>.</p>
+    <label>Customer ID or username<input id="loginUser" autocomplete="off"></label>
+    <label>Password<input id="loginPass" type="password"></label>
+    <button class="btn" type="submit">Log in</button>
+    <p class="links"><a href="#" data-forgot="username">Forgot username?</a> <a href="#" data-forgot="password">Forgot password?</a></p>
+  </form>
+</section>
+
+<div id="app" hidden>
+<header class="topbar">
+  <strong class="brand">PayFlow</strong>
+  <button id="menuBtn" class="icon" aria-label="Menu">☰</button>
+  <nav id="nav">
+    <a href="#dashboard">Dashboard</a><a href="#payment">Pay</a><a href="#transactions">Transactions</a>
+    <a href="#cards">Cards</a><a href="#profile">Profile</a><a href="#about">About</a><a href="#contact">Contact</a>
+  </nav>
+  <button id="themeBtn" class="icon" aria-label="Toggle dark mode">◐</button>
+  <button id="logoutBtn" class="btn ghost">Log out</button>
+</header>
+<div class="banner">Simulated payments only – no real money moves and no real card data is collected.</div>
+
+<main>
+<section id="dashboard">
+  <h2>Welcome, <span id="dName"></span> <small id="dId" class="muted"></small></h2>
+  <div class="grid stats">
+    <div class="stat"><span>Total transactions</span><b id="sTotal">0</b></div>
+    <div class="stat ok"><span>Successful</span><b id="sOk">0</b></div>
+    <div class="stat warn"><span>Pending</span><b id="sPend">0</b></div>
+    <div class="stat bad"><span>Failed</span><b id="sFail">0</b></div>
+    <div class="stat"><span>Total spent</span><b id="sSpent">0</b></div>
+  </div>
+  <div class="quick">
+    <a class="btn" href="#payment">Make a payment</a><a class="btn ghost" href="#transactions">View transactions</a>
+    <a class="btn ghost" href="#cards">Manage cards</a><a class="btn ghost" href="#profile">View profile</a>
+  </div>
+  <h3>Monthly spending (successful payments)</h3>
+  <div id="monthly" class="months"></div>
+</section>
+
+<section id="payment">
+  <h2>Make a payment</h2>
+  <div class="split">
+    <form id="payForm" class="card form" novalidate>
+      <div class="row"><label>Customer name<input name="name"></label><label>Customer ID<input name="cid"></label></div>
+      <div class="row"><label>Email<input name="email" type="email"></label><label>Phone<input name="phone" inputmode="tel"></label></div>
+      <div class="row">
+        <label>Payment description
+          <select name="desc"><option value="">Select…</option><option>Purchase Payment</option><option>Online Shopping</option><option>Grocery Payment</option><option>Electricity Bill</option><option>Restaurant Payment</option><option>Travel Booking</option><option>Subscription Payment</option></select></label>
+        <label>Payment date<input name="date" type="date"></label>
+      </div>
+      <div class="row"><label>Amount<input name="amount" inputmode="decimal"></label>
+        <label>Currency<select name="cur"><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></label></div>
+      <label>Payment method<select name="method" id="method"><option value="">Select…</option><option>Visa</option><option>Mastercard</option><option>RuPay</option></select></label>
+      <label>Cardholder name<input name="holder"></label>
+      <label>Card number (fictional – try 4242 4242 4242 4242)<input name="card" inputmode="numeric" autocomplete="off" maxlength="23"></label>
+      <div class="row"><label>Expiry month<select name="mm"></select></label><label>Expiry year<select name="yy"></select></label><label>CVV<input name="cvv" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></label></div>
+      <p id="payErr" class="err" role="alert"></p>
+      <div class="row"><button id="payBtn" class="btn" type="submit">Submit payment</button><button id="clearBtn" class="btn ghost" type="button">Clear form</button></div>
+    </form>
+    <aside class="card">
+      <h3>Payment flow</h3>
+      <ol id="steps" class="steps">
+        <li>Enter card details</li><li>Validate card details</li><li>Enter payment amount</li>
+        <li>Authorize payment</li><li>Process payment</li><li>Verify transaction</li><li>Generate receipt</li>
+      </ol>
+      <p class="muted small">Demo rules: invalid card number → rejected. Card ending 0000 or amount over 50,000 → declined. Amount over 20,000 → flagged suspicious (pending). About 1 in 10 fail at processing.</p>
+    </aside>
+  </div>
+</section>
+
+<section id="transactions">
+  <h2>Transaction history</h2>
+  <div class="filters">
+    <input id="fSearch" placeholder="Search ID or description">
+    <select id="fStatus"><option value="">All statuses</option><option>Successful</option><option>Pending</option><option>Failed</option></select>
+    <select id="fMethod"><option value="">All methods</option><option>Visa</option><option>Mastercard</option><option>RuPay</option></select>
+    <input id="fDate" type="date">
+    <button id="fReset" class="btn ghost">Reset filters</button>
+  </div>
+  <div class="scroll"><table>
+    <thead><tr><th>ID</th><th>Description</th><th>Date</th><th>Method</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+    <tbody id="txBody"></tbody></table></div>
+  <p id="txEmpty" class="muted" hidden>No transactions match your filters. Reset the filters to see all.</p>
+  <h3>Recent payments</h3>
+  <div id="txCards" class="grid cards3"></div>
+</section>
+
+<section id="cards">
+  <h2>Saved cards</h2>
+  <div id="cardList" class="grid cards3"></div>
+  <form id="addCard" class="card row" novalidate>
+    <label>Type<select name="type"><option>Visa</option><option>Mastercard</option><option>RuPay</option></select></label>
+    <label>Last 4 digits<input name="last4" maxlength="4" inputmode="numeric"></label>
+    <label>Expiry (MM/YY)<input name="exp" placeholder="08/29" maxlength="5"></label>
+    <button class="btn" type="submit">Add demo card</button>
+  </form>
+  <p class="muted small">Only the card type, last 4 digits and expiry are kept. Full numbers and CVVs are never stored.</p>
+</section>
+
+<section id="profile">
+  <h2>Customer profile</h2>
+  <form id="profForm" class="card form" novalidate>
+    <div class="row"><label>Name<input name="name" disabled></label><label>Customer ID<input name="cid" disabled></label></div>
+    <div class="row"><label>Email<input name="email" disabled></label><label>Phone<input name="phone" disabled></label></div>
+    <label>Account type<input name="type" disabled></label>
+    <div class="row"><button id="editBtn" class="btn ghost" type="button">Edit profile</button><button id="saveBtn" class="btn" type="submit" disabled>Save changes</button></div>
+  </form>
+</section>
+
+<section id="about">
+  <h2>About</h2>
+  <p>PayFlow is an educational model of a credit card processing system. It follows the use-case flow of a cardholder, merchant and system: enter and validate card details, enter an amount, authorize, process, verify the transaction and generate a receipt. It demonstrates form validation, transaction management, status tracking and live dashboard updates.</p>
+</section>
+
+<section id="contact">
+  <h2>Contact</h2>
+  <form id="contactForm" class="card form" novalidate>
+    <div class="row"><label>Name<input name="name"></label><label>Email<input name="email" type="email"></label></div>
+    <label>Subject<input name="subject"></label>
+    <label>Message<textarea name="msg" rows="4"></textarea></label>
+    <p id="cErr" class="err" role="alert"></p>
+    <button class="btn" type="submit">Send message</button>
+  </form>
+</section>
+</main>
+
+<footer>
+  <strong>PayFlow</strong> · <a href="#about">About</a> · <a href="#contact">Contact</a> ·
+  <a href="#" data-info="Privacy Notice|This demo keeps non-sensitive sample data in your browser only. Nothing is sent anywhere.">Privacy Notice</a> ·
+  <a href="#" data-info="Terms and Conditions|For education only. Do not enter real card details. All transactions are simulated.">Terms and Conditions</a>
+  <p class="small">© 2026 PayFlow. Educational front-end demo – it does not process actual payments.</p>
+</footer>
+</div>
+
+<!-- Popup -->
+<div id="modal" class="modal" hidden><div class="modal-box" role="dialog" aria-modal="true"><h3 id="mTitle"></h3><div id="mBody"></div><button id="mClose" class="btn">Close</button></div></div>
+<script src="script.js"></script>
+</body>
+</html>
